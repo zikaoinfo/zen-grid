@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, linkedSignal, signal } from '@angular/core';
 import { ZenGridComponent, textColumn, numberColumn, booleanColumn, currencyColumn } from 'zen-grid';
 import type { ColDefOrGroup, GridOptions, GridReadyEvent } from 'zen-grid';
 import type { GridApi } from 'zen-grid';
@@ -154,7 +154,8 @@ export class CanvasDemoComponent {
 
   readonly rows: Row[]    = generateRows(100_000);
   readonly renderMs       = signal<number | null>(null);
-  readonly displayed      = signal(this.rows.length);
+  // linkedSignal: resets to full row count whenever a new dataset is bound
+  readonly displayed      = linkedSignal(() => this.rows.length);
 
   readonly columns: ColDefOrGroup<Row>[] = [
     numberColumn<Row>('id',         { headerName: 'ID',         decimals: 0, width: 90 }),

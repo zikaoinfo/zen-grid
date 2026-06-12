@@ -17,6 +17,21 @@ const ROWS: Planet[] = [
   { name: 'Neptune', type: 'Ice Giant',   diameter:  49_528, moons:  16 },
 ];
 
+const CODE_SETUP = `// main.ts — Angular 22 bootstrap (zoneless, signal-native)
+import { bootstrapApplication } from '@angular/platform-browser';
+import { provideZonelessChangeDetection } from '@angular/core';
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideZonelessChangeDetection(), // stable since Angular 20
+  ],
+});
+
+// No zone.js import needed!
+// Every component is automatically OnPush — signal writes schedule
+// a targeted re-render of only the affected view subtree.`;
+
 const CODE_TS = `import { Component } from '@angular/core';
 import { ZenGridComponent, textColumn, numberColumn } from 'zen-grid';
 import type { ColDefOrGroup } from 'zen-grid';
@@ -113,5 +128,8 @@ export class BasicDemoComponent {
     numberColumn<Planet>('moons',    { headerName: 'Moons',       decimals: 0, width: 90 }),
   ];
 
-  readonly codeTabs: CodeTab[] = [{ label: 'TypeScript', code: CODE_TS }];
+  readonly codeTabs: CodeTab[] = [
+    { label: 'Component',  code: CODE_TS    },
+    { label: 'Bootstrap',  code: CODE_SETUP },
+  ];
 }

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, linkedSignal, signal } from '@angular/core';
 import {
   ZenGridComponent,
   textColumn, currencyColumn, dateColumn, booleanColumn, badgeColumn, numberColumn,
@@ -118,7 +118,7 @@ export class ShowcaseComponent {
             <button
               class="btn-toggle"
               [class.on]="grouped()"
-              (click)="toggleGrouped()"
+              (click)="grouped.update(v => !v)"
             >{{ grouped() ? 'Ungroup' : 'Group by Dept' }}</button>
             @if (selected() > 0) {
               <span class="sel-pill">{{ selected() }} selected</span>
@@ -215,7 +215,7 @@ export class HomeDemoComponent {
   readonly EMPLOYEES = EMPLOYEES;
   private gridApi: GridApi<Employee> | null = null;
   readonly grouped   = signal(false);
-  readonly displayed = signal(EMPLOYEES.length);
+  readonly displayed = linkedSignal(() => { void this.grouped(); return EMPLOYEES.length; });
   readonly selected  = signal(0);
 
   readonly flatCols: ColDefOrGroup<Employee>[] = [
@@ -251,7 +251,6 @@ export class HomeDemoComponent {
   onGridReady(event: GridReadyEvent<Employee>): void           { this.gridApi = event.api; }
   onFilterChanged(): void                                       { this.displayed.set(this.gridApi?.getDisplayedRowCount() ?? EMPLOYEES.length); }
   onSelectionChanged(e: SelectionChangedEvent<Employee>): void { this.selected.set(e.selectedRows.length); }
-  toggleGrouped(): void                                         { this.grouped.update(v => !v); }
 
   onSearch(event: Event): void {
     const value = (event.target as HTMLInputElement).value;

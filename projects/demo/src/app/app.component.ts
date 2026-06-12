@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, linkedSignal, signal } from '@angular/core';
 import { HomeDemoComponent }        from './home-demo.component';
 import { BasicDemoComponent }       from './basic-demo.component';
 import { ColumnTypesDemoComponent } from './column-types-demo.component';
@@ -14,13 +14,13 @@ interface NavItem { id: Route; label: string; }
 interface NavSection { label: string; items: NavItem[]; }
 
 const NAV: NavSection[] = [
-  { label: 'Overview',        items: [{ id: 'home',         label: 'Showcase'        }] },
-  { label: 'Getting Started', items: [{ id: 'hello-world',  label: 'Hello World'     },
-                                       { id: 'column-types', label: 'Column Types'    }] },
-  { label: 'Features',        items: [{ id: 'sorting',      label: 'Sort & Filter'   },
-                                       { id: 'grouping',     label: 'Row Grouping'    },
-                                       { id: 'editing',      label: 'Inline Editing'  }] },
-  { label: 'Performance',     items: [{ id: 'large',        label: '25 000 Rows'     },
+  { label: 'Overview',        items: [{ id: 'home',         label: 'Showcase'            }] },
+  { label: 'Getting Started', items: [{ id: 'hello-world',  label: 'Hello World'         },
+                                       { id: 'column-types', label: 'Column Types'        }] },
+  { label: 'Features',        items: [{ id: 'sorting',      label: 'Sort & Filter'       },
+                                       { id: 'grouping',     label: 'Row Grouping'        },
+                                       { id: 'editing',      label: 'Inline Editing'      }] },
+  { label: 'Performance',     items: [{ id: 'large',        label: '25 000 Rows'         },
                                        { id: 'canvas',       label: '100k Virtual Scroll' }] },
 ];
 
@@ -53,7 +53,7 @@ const NAV: NavSection[] = [
               <button
                 class="nav-item"
                 [class.active]="route() === item.id"
-                (click)="navigate(item.id)"
+                (click)="route.set(item.id)"
               >{{ item.label }}</button>
             }
           </div>
@@ -67,7 +67,7 @@ const NAV: NavSection[] = [
 
       <div class="main">
         <header class="topbar">
-          <button class="burger" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+          <button class="burger" (click)="sidebarOpen.update(v => !v)" aria-label="Toggle sidebar">
             <span></span><span></span><span></span>
           </button>
           <span class="page-crumb">zen-grid</span>
@@ -185,7 +185,7 @@ const NAV: NavSection[] = [
 })
 export class AppComponent {
   readonly nav = NAV;
-  readonly route = signal<Route>('home');
+  readonly route       = signal<Route>('home');
   readonly sidebarOpen = signal(true);
 
   readonly currentItem = computed(() => {
@@ -195,7 +195,4 @@ export class AppComponent {
     }
     return NAV[0].items[0];
   });
-
-  navigate(id: Route): void { this.route.set(id); }
-  toggleSidebar(): void { this.sidebarOpen.update(v => !v); }
 }

@@ -1,4 +1,4 @@
-import { Component, Signal, computed, inject, input, signal } from '@angular/core';
+import { Component, Signal, computed, inject, input, linkedSignal, signal } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 export interface CodeTab { label: string; code: string; }
@@ -162,7 +162,8 @@ function highlight(raw: string): string {
 export class CodePanelComponent {
   private readonly san = inject(DomSanitizer);
   readonly tabs      = input.required<CodeTab[]>();
-  readonly activeIdx = signal(0);
+  // Reset to first tab whenever the tab list changes (e.g. navigating between demos)
+  readonly activeIdx = linkedSignal(() => { void this.tabs(); return 0; });
   readonly copied    = signal(false);
 
   readonly html: Signal<SafeHtml> = computed(() =>
