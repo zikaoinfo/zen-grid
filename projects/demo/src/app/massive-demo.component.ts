@@ -262,6 +262,7 @@ const options: GridOptions<Row> = {
 export class MassiveDemoComponent {
   private readonly initTime = Date.now();
   private gridApi: GridApi<Row> | null = null;
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly rows: Row[] = generateRows(500_000);
   readonly renderMs  = signal<number | null>(null);
@@ -347,7 +348,10 @@ export class MassiveDemoComponent {
 
   onSearch(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
-    this.gridApi?.setQuickFilter(value || null);
-    this.displayed.set(this.gridApi?.getDisplayedRowCount() ?? this.rows.length);
+    if (this.searchTimer !== null) clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => {
+      this.gridApi?.setQuickFilter(value || null);
+      this.displayed.set(this.gridApi?.getDisplayedRowCount() ?? this.rows.length);
+    }, 250);
   }
 }
