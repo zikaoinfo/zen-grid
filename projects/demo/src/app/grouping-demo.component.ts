@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ZenGridComponent, textColumn, currencyColumn, badgeColumn, numberColumn } from 'zen-grid';
 import type { ColDefOrGroup, GridOptions } from 'zen-grid';
-import { CodePanelComponent } from './code-panel.component';
+import { SplitPaneComponent } from './split-pane.component';
 import type { CodeTab } from './code-panel.component';
 import { Employee, EMPLOYEES } from './data';
 
@@ -35,8 +35,6 @@ const columns: ColDefOrGroup<Employee>[] = [
 const options: GridOptions<Employee> = {
   grouping: {
     defaultExpanded: true,   // expand all groups initially
-    subtotals: true,         // show agg values on sub-groups
-    grandTotalRow: 'bottom', // pinned grand-total row
   },
   defaultColDef: { sortable: true },
 };`;
@@ -49,12 +47,20 @@ const columns: ColDefOrGroup<Employee>[] = [
   currencyColumn<Employee>('salary', { aggFunc: 'avg' }),
 ];
 
-// Groups will be: Engineering > Software Engineer > [employees]`;
+// Groups will be:
+// Engineering
+//   Software Engineer
+//     Alice Smith
+//     Bob Johnson
+//   Senior Engineer
+//     ...
+// Sales
+//   ...`;
 
 @Component({
   selector: 'app-grouping-demo',
   standalone: true,
-  imports: [ZenGridComponent, CodePanelComponent],
+  imports: [ZenGridComponent, SplitPaneComponent],
   template: `
     <div class="page">
       <div class="intro">
@@ -66,7 +72,7 @@ const columns: ColDefOrGroup<Employee>[] = [
           on group rows. Click group rows to expand / collapse.
         </p>
       </div>
-      <div class="body">
+      <app-split-pane [codeTabs]="codeTabs">
         <div class="demo">
           <div class="toolbar">
             <span class="hint">Click a group row to expand / collapse it</span>
@@ -79,8 +85,7 @@ const columns: ColDefOrGroup<Employee>[] = [
             [options]="options"
           />
         </div>
-        <app-code-panel [tabs]="codeTabs" />
-      </div>
+      </app-split-pane>
     </div>
   `,
   styles: [`
@@ -98,8 +103,6 @@ const columns: ColDefOrGroup<Employee>[] = [
         background: #1e1f38; padding: 1px 5px; border-radius: 4px; color: #a5b4fc;
       }
     }
-
-    .body { display: flex; flex: 1; overflow: hidden; }
 
     .demo {
       flex: 1; min-width: 0; display: flex; flex-direction: column;

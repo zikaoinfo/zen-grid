@@ -2,7 +2,7 @@ import { Component, signal } from '@angular/core';
 import { ZenGridComponent, textColumn, currencyColumn, badgeColumn, numberColumn } from 'zen-grid';
 import type { ColDefOrGroup, GridOptions, GridReadyEvent, CellValueChangedEvent } from 'zen-grid';
 import type { GridApi } from 'zen-grid';
-import { CodePanelComponent } from './code-panel.component';
+import { SplitPaneComponent } from './split-pane.component';
 import type { CodeTab } from './code-panel.component';
 import { Employee, EMPLOYEES } from './data';
 
@@ -32,17 +32,16 @@ import type { GridApi } from 'zen-grid';
 })
 export class EditingDemoComponent {
   private api: GridApi<Employee> | null = null;
-  readonly canUndo = signal(false);
-  readonly canRedo = signal(false);
+  readonly canUndo  = signal(false);
+  readonly canRedo  = signal(false);
   readonly lastEdit = signal<string | null>(null);
 
-  // Mark individual columns as editable
   readonly columns: ColDefOrGroup<Employee>[] = [
     textColumn<Employee>('name',   { flex: 1.5, pinned: 'left' }),
     textColumn<Employee>('role',   { flex: 1, editable: true }),
     currencyColumn<Employee>('salary', {
       editable: true,
-      // conditional: only active employees
+      // conditional: only active employees can edit
       // editable: (row) => row.status === 'Active',
     }),
   ];
@@ -58,7 +57,7 @@ export class EditingDemoComponent {
 
   onCellValueChanged(e: CellValueChangedEvent<Employee>) {
     this.lastEdit.set(
-      \`\${e.colId}: \${String(e.oldValue)} → \${String(e.newValue)}\`
+      \`\${e.colId}: \${String(e.oldValue)} to \${String(e.newValue)}\`
     );
     this.syncUndoRedo();
   }
@@ -91,24 +90,30 @@ textColumn<Employee>('role', {
 // Custom cell editor component
 import type { ZenCellEditor, CellEditorParams } from 'zen-grid';
 
-@Component({ standalone: true, template: \`<select [(ngModel)]="value">...</select>\` })
-class SelectEditor implements ZenCellEditor<Employee> {
-  value = '';
+@Component({
+  standalone: true,
+  template: \`<select [(ngModel)]="val">
+    <option>Active</option>
+    <option>Inactive</option>
+  </select>\`,
+})
+class StatusEditor implements ZenCellEditor<Employee> {
+  val = '';
   zenEditorInit(p: CellEditorParams<Employee>) {
-    this.value = String(p.value);
+    this.val = String(p.value);
   }
-  getValue() { return this.value; }
+  getValue() { return this.val; }
 }
 
 textColumn<Employee>('status', {
   editable: true,
-  cellEditor: SelectEditor,
+  cellEditor: StatusEditor,
 })`;
 
 @Component({
   selector: 'app-editing-demo',
   standalone: true,
-  imports: [ZenGridComponent, CodePanelComponent],
+  imports: [ZenGridComponent, SplitPaneComponent],
   template: `
     <div class="page">
       <div class="intro">
@@ -120,10 +125,10 @@ textColumn<Employee>('status', {
           editing, <kbd>Enter</kbd> to confirm, <kbd>Esc</kbd> to cancel.
         </p>
       </div>
-      <div class="body">
+      <app-split-pane [codeTabs]="codeTabs">
         <div class="demo">
           <div class="toolbar">
-            <span class="hint">Double-click Salary or Score cells to edit</span>
+            <span class="hint">Double-click <strong>Salary</strong> or <strong>Score</strong> cells to edit</span>
             <button class="btn-undo" [disabled]="!canUndo()" (click)="undo()">Undo</button>
             <button class="btn-undo" [disabled]="!canRedo()" (click)="redo()">Redo</button>
           </div>
@@ -139,8 +144,7 @@ textColumn<Employee>('status', {
             (cellValueChanged)="onCellValueChanged($event)"
           />
         </div>
-        <app-code-panel [tabs]="codeTabs" />
-      </div>
+      </app-split-pane>
     </div>
   `,
   styles: [`
@@ -158,8 +162,6 @@ textColumn<Employee>('status', {
         background: #1e1f38; padding: 1px 5px; border-radius: 4px; color: #a5b4fc;
       }
     }
-
-    .body { display: flex; flex: 1; overflow: hidden; }
 
     .demo {
       flex: 1; min-width: 0; display: flex; flex-direction: column;
@@ -228,21 +230,12 @@ export class EditingDemoComponent {
   onCellValueChanged(event: CellValueChangedEvent<Employee>): void {
     const name = (event.row as Employee).name;
     const col  = event.colId === 'salary' ? 'Salary' : 'Score';
-    this.lastEdit.set(`${name} — ${col}: ${String(event.oldValue)} → ${String(event.newValue)}`);
+    this.lastEdit.set(`${name} — ${col}: ${String(event.oldValue)} to ${String(event.newValue)}`);
     this.syncUndoRedo();
   }
 
-  undo(): void {
-    this.gridApi?.undo();
-    this.syncUndoRedo();
-    this.lastEdit.set('(undo applied)');
-  }
-
-  redo(): void {
-    this.gridApi?.redo();
-    this.syncUndoRedo();
-    this.lastEdit.set('(redo applied)');
-  }
+  undo(): void { this.gridApi?.undo(); this.syncUndoRedo(); this.lastEdit.set('(undo applied)'); }
+  redo(): void { this.gridApi?.redo(); this.syncUndoRedo(); this.lastEdit.set('(redo applied)'); }
 
   private syncUndoRedo(): void {
     this.canUndo.set(this.gridApi?.canUndo() ?? false);

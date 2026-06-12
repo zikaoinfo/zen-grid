@@ -6,20 +6,22 @@ import { SortingDemoComponent }     from './sorting-demo.component';
 import { GroupingDemoComponent }    from './grouping-demo.component';
 import { EditingDemoComponent }     from './editing-demo.component';
 import { LargeDemoComponent }       from './large-demo.component';
+import { CanvasDemoComponent }      from './canvas-demo.component';
 
-type Route = 'home' | 'hello-world' | 'column-types' | 'sorting' | 'grouping' | 'editing' | 'large';
+type Route = 'home' | 'hello-world' | 'column-types' | 'sorting' | 'grouping' | 'editing' | 'large' | 'canvas';
 
 interface NavItem { id: Route; label: string; }
 interface NavSection { label: string; items: NavItem[]; }
 
 const NAV: NavSection[] = [
-  { label: 'Overview',        items: [{ id: 'home',         label: 'Showcase'      }] },
-  { label: 'Getting Started', items: [{ id: 'hello-world',  label: 'Hello World'   },
-                                       { id: 'column-types', label: 'Column Types'  }] },
-  { label: 'Features',        items: [{ id: 'sorting',      label: 'Sort & Filter' },
-                                       { id: 'grouping',     label: 'Row Grouping'  },
-                                       { id: 'editing',      label: 'Inline Editing'}] },
-  { label: 'Performance',     items: [{ id: 'large',        label: '25 000 Rows'   }] },
+  { label: 'Overview',        items: [{ id: 'home',         label: 'Showcase'        }] },
+  { label: 'Getting Started', items: [{ id: 'hello-world',  label: 'Hello World'     },
+                                       { id: 'column-types', label: 'Column Types'    }] },
+  { label: 'Features',        items: [{ id: 'sorting',      label: 'Sort & Filter'   },
+                                       { id: 'grouping',     label: 'Row Grouping'    },
+                                       { id: 'editing',      label: 'Inline Editing'  }] },
+  { label: 'Performance',     items: [{ id: 'large',        label: '25 000 Rows'     },
+                                       { id: 'canvas',       label: '100 000 Rows'    }] },
 ];
 
 @Component({
@@ -33,6 +35,7 @@ const NAV: NavSection[] = [
     GroupingDemoComponent,
     EditingDemoComponent,
     LargeDemoComponent,
+    CanvasDemoComponent,
   ],
   template: `
     <div class="shell" [class.open]="sidebarOpen()">
@@ -80,7 +83,8 @@ const NAV: NavSection[] = [
             @case ('sorting')      { <app-sorting-demo /> }
             @case ('grouping')     { <app-grouping-demo /> }
             @case ('editing')      { <app-editing-demo /> }
-            @case ('large')        { <app-large-demo /> }
+            @case ('large')        { <app-large-demo />  }
+            @case ('canvas')       { <app-canvas-demo /> }
           }
         </div>
       </div>

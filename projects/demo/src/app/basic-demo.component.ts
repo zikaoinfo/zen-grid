@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ZenGridComponent, textColumn, numberColumn } from 'zen-grid';
 import type { ColDefOrGroup } from 'zen-grid';
-import { CodePanelComponent } from './code-panel.component';
+import { SplitPaneComponent } from './split-pane.component';
 import type { CodeTab } from './code-panel.component';
 
 interface Planet { name: string; type: string; diameter: number; moons: number; }
@@ -46,8 +46,8 @@ export class HelloWorldComponent {
   readonly rows = ROWS;
 
   readonly columns: ColDefOrGroup<Planet>[] = [
-    textColumn<Planet>('name',     { headerName: 'Planet'      }),
-    textColumn<Planet>('type',     { headerName: 'Type'        }),
+    textColumn<Planet>('name',     { headerName: 'Planet'                         }),
+    textColumn<Planet>('type',     { headerName: 'Type'                           }),
     numberColumn<Planet>('diameter', {
       headerName: 'Diameter km', decimals: 0,
     }),
@@ -60,7 +60,7 @@ export class HelloWorldComponent {
 @Component({
   selector: 'app-basic-demo',
   standalone: true,
-  imports: [ZenGridComponent, CodePanelComponent],
+  imports: [ZenGridComponent, SplitPaneComponent],
   template: `
     <div class="page">
       <div class="intro">
@@ -71,12 +71,11 @@ export class HelloWorldComponent {
           <code>[rowData]</code> to <code>&lt;zen-grid&gt;</code>.
         </p>
       </div>
-      <div class="body">
+      <app-split-pane [codeTabs]="codeTabs">
         <div class="demo">
           <zen-grid class="grid" [columnDefs]="columns" [rowData]="rows" />
         </div>
-        <app-code-panel [tabs]="codeTabs" />
-      </div>
+      </app-split-pane>
     </div>
   `,
   styles: [`
@@ -85,10 +84,8 @@ export class HelloWorldComponent {
     .page { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
 
     .intro {
-      padding: 16px 24px;
-      background: #12131f;
-      border-bottom: 1px solid #1a1b2e;
-      flex-shrink: 0;
+      padding: 16px 24px; background: #12131f;
+      border-bottom: 1px solid #1a1b2e; flex-shrink: 0;
       h2 { font-size: 16px; font-weight: 600; color: #cdd6f4; margin: 0 0 4px; }
       p  { font-size: 13px; color: #6c7086; margin: 0; line-height: 1.5; }
       code {
@@ -97,13 +94,10 @@ export class HelloWorldComponent {
       }
     }
 
-    .body { display: flex; flex: 1; overflow: hidden; }
-
     .demo {
       flex: 1; min-width: 0;
       display: flex; flex-direction: column;
-      padding: 20px 24px;
-      background: #f8fafc;
+      padding: 20px 24px; background: #f8fafc;
     }
 
     .grid { flex: 1; min-height: 0; }
@@ -113,13 +107,11 @@ export class BasicDemoComponent {
   readonly rows = ROWS;
 
   readonly columns: ColDefOrGroup<Planet>[] = [
-    textColumn<Planet>('name',     { headerName: 'Planet'                         }),
-    textColumn<Planet>('type',     { headerName: 'Type'                           }),
-    numberColumn<Planet>('diameter', { headerName: 'Diameter km', decimals: 0     }),
+    textColumn<Planet>('name',     { headerName: 'Planet'                             }),
+    textColumn<Planet>('type',     { headerName: 'Type'                               }),
+    numberColumn<Planet>('diameter', { headerName: 'Diameter km', decimals: 0         }),
     numberColumn<Planet>('moons',    { headerName: 'Moons',       decimals: 0, width: 90 }),
   ];
 
-  readonly codeTabs: CodeTab[] = [
-    { label: 'TypeScript', code: CODE_TS },
-  ];
+  readonly codeTabs: CodeTab[] = [{ label: 'TypeScript', code: CODE_TS }];
 }

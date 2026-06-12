@@ -2,7 +2,7 @@ import { Component, signal } from '@angular/core';
 import { ZenGridComponent, textColumn, currencyColumn, badgeColumn, numberColumn } from 'zen-grid';
 import type { ColDefOrGroup, GridOptions, GridReadyEvent } from 'zen-grid';
 import type { GridApi } from 'zen-grid';
-import { CodePanelComponent } from './code-panel.component';
+import { SplitPaneComponent } from './split-pane.component';
 import type { CodeTab } from './code-panel.component';
 import { Employee, EMPLOYEES } from './data';
 
@@ -31,7 +31,7 @@ textColumn<Employee>('name', {
 //   { colId: 'salary',     direction: 'desc', priority: 1 },
 // ]`;
 
-const CODE_FILTER = `// Text filter (default — contains / equals / starts-with…)
+const CODE_FILTER = `// Text filter (default — contains / equals / starts-with...)
 textColumn<Employee>('role', { filter: 'text' })
 
 // Set filter — dropdown with unique values
@@ -50,7 +50,7 @@ gridApi.setQuickFilter(null); // clear`;
 @Component({
   selector: 'app-sorting-demo',
   standalone: true,
-  imports: [ZenGridComponent, CodePanelComponent],
+  imports: [ZenGridComponent, SplitPaneComponent],
   template: `
     <div class="page">
       <div class="intro">
@@ -62,7 +62,7 @@ gridApi.setQuickFilter(null); // clear`;
           visible columns.
         </p>
       </div>
-      <div class="body">
+      <app-split-pane [codeTabs]="codeTabs">
         <div class="demo">
           <div class="toolbar">
             <input
@@ -83,8 +83,7 @@ gridApi.setQuickFilter(null); // clear`;
             (filterChanged)="onFilterChanged()"
           />
         </div>
-        <app-code-panel [tabs]="codeTabs" />
-      </div>
+      </app-split-pane>
     </div>
   `,
   styles: [`
@@ -103,8 +102,6 @@ gridApi.setQuickFilter(null); // clear`;
         color: #cdd6f4; font-size: 11px; font-family: inherit;
       }
     }
-
-    .body { display: flex; flex: 1; overflow: hidden; }
 
     .demo {
       flex: 1; min-width: 0; display: flex; flex-direction: column;
@@ -150,13 +147,8 @@ export class SortingDemoComponent {
     { label: 'Filtering', code: CODE_FILTER },
   ];
 
-  onGridReady(event: GridReadyEvent<Employee>): void {
-    this.gridApi = event.api;
-  }
-
-  onFilterChanged(): void {
-    this.displayed.set(this.gridApi?.getDisplayedRowCount() ?? EMPLOYEES.length);
-  }
+  onGridReady(event: GridReadyEvent<Employee>): void { this.gridApi = event.api; }
+  onFilterChanged(): void { this.displayed.set(this.gridApi?.getDisplayedRowCount() ?? EMPLOYEES.length); }
 
   onSearch(event: Event): void {
     const value = (event.target as HTMLInputElement).value;

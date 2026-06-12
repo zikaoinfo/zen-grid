@@ -5,7 +5,7 @@ import {
 } from 'zen-grid';
 import type { ColDefOrGroup, GridOptions, GridReadyEvent, SelectionChangedEvent } from 'zen-grid';
 import type { GridApi } from 'zen-grid';
-import { CodePanelComponent } from './code-panel.component';
+import { SplitPaneComponent } from './split-pane.component';
 import type { CodeTab } from './code-panel.component';
 import { Employee, EMPLOYEES } from './data';
 
@@ -19,7 +19,6 @@ import type {
   ColDefOrGroup, GridOptions,
   GridReadyEvent, SelectionChangedEvent,
 } from 'zen-grid';
-import type { GridApi } from 'zen-grid';
 
 @Component({
   standalone: true,
@@ -36,9 +35,9 @@ import type { GridApi } from 'zen-grid';
   \`,
 })
 export class ShowcaseComponent {
-  private gridApi: GridApi<Employee> | null = null;
-  readonly grouped  = signal(false);
-  readonly selected = signal(0);
+  private api: GridApi<Employee> | null = null;
+  readonly grouped   = signal(false);
+  readonly selected  = signal(0);
   readonly displayed = signal(rows.length);
 
   readonly flatCols: ColDefOrGroup<Employee>[] = [
@@ -69,21 +68,21 @@ export class ShowcaseComponent {
     defaultColDef: { sortable: true },
   };
 
-  onGridReady(e: GridReadyEvent<Employee>) { this.gridApi = e.api; }
+  onGridReady(e: GridReadyEvent<Employee>) { this.api = e.api; }
 
   onSelectionChanged(e: SelectionChangedEvent<Employee>) {
     this.selected.set(e.selectedRows.length);
   }
 
   onFilterChanged() {
-    this.displayed.set(this.gridApi?.getDisplayedRowCount() ?? rows.length);
+    this.displayed.set(this.api?.getDisplayedRowCount() ?? rows.length);
   }
 }`;
 
 @Component({
   selector: 'app-home-demo',
   standalone: true,
-  imports: [ZenGridComponent, CodePanelComponent],
+  imports: [ZenGridComponent, SplitPaneComponent],
   template: `
     <div class="home">
       <div class="hero">
@@ -107,8 +106,8 @@ export class ShowcaseComponent {
         </div>
       </div>
 
-      <div class="demo-body">
-        <div class="demo-side">
+      <app-split-pane [codeTabs]="codeTabs">
+        <div class="demo">
           <div class="toolbar">
             <input
               class="search"
@@ -138,9 +137,7 @@ export class ShowcaseComponent {
             (selectionChanged)="onSelectionChanged($event)"
           />
         </div>
-
-        <app-code-panel [tabs]="codeTabs" />
-      </div>
+      </app-split-pane>
     </div>
   `,
   styles: [`
@@ -171,22 +168,18 @@ export class ShowcaseComponent {
     .stat-n { display: block; font-size: 30px; font-weight: 700; color: #6366f1; line-height: 1; }
     .stat-l { display: block; font-size: 11px; color: #585b70; margin-top: 3px; }
 
-    /* Demo body */
-    .demo-body { display: flex; flex: 1; overflow: hidden; }
-
-    .demo-side {
+    /* Demo area (projected into split-pane) */
+    .demo {
       flex: 1; min-width: 0;
       display: flex; flex-direction: column;
-      padding: 14px 16px 16px;
-      gap: 10px;
+      padding: 14px 16px 16px; gap: 10px;
       background: #0f172a;
     }
 
     /* Toolbar */
     .toolbar { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .search {
-      flex: 1; max-width: 280px;
-      padding: 7px 12px;
+      flex: 1; max-width: 280px; padding: 7px 12px;
       background: #1e1f38; border: 1px solid #313244;
       border-radius: 7px; color: #cdd6f4;
       font-size: 13px; font-family: inherit; outline: none;
@@ -194,8 +187,7 @@ export class ShowcaseComponent {
       &:focus { border-color: #6366f1; }
     }
     .btn-toggle {
-      padding: 7px 14px;
-      background: transparent; border: 1px solid #313244;
+      padding: 7px 14px; background: transparent; border: 1px solid #313244;
       border-radius: 7px; color: #7f849c;
       font-size: 12px; font-family: inherit; cursor: pointer;
       transition: all 0.12s; white-space: nowrap;
@@ -203,17 +195,13 @@ export class ShowcaseComponent {
       &.on { background: rgb(99 102 241 / 0.18); border-color: #6366f1; color: #a5b4fc; }
     }
     .sel-pill {
-      padding: 4px 10px; border-radius: 20px;
-      font-size: 12px; color: #a5b4fc;
-      background: rgb(99 102 241 / 0.15);
-      border: 1px solid rgb(99 102 241 / 0.3);
+      padding: 4px 10px; border-radius: 20px; font-size: 12px; color: #a5b4fc;
+      background: rgb(99 102 241 / 0.15); border: 1px solid rgb(99 102 241 / 0.3);
       white-space: nowrap;
     }
     .btn-export {
-      margin-left: auto;
-      padding: 7px 14px;
-      background: #6366f1; border: none;
-      border-radius: 7px; color: #fff;
+      margin-left: auto; padding: 7px 14px;
+      background: #6366f1; border: none; border-radius: 7px; color: #fff;
       font-size: 12px; font-family: inherit; cursor: pointer;
       transition: background 0.12s; white-space: nowrap;
       &:hover { background: #4f46e5; }
@@ -258,21 +246,12 @@ export class HomeDemoComponent {
     defaultColDef: { sortable: true },
   };
 
-  readonly codeTabs: CodeTab[] = [
-    { label: 'TypeScript', code: CODE_TS },
-  ];
+  readonly codeTabs: CodeTab[] = [{ label: 'TypeScript', code: CODE_TS }];
 
-  onGridReady(event: GridReadyEvent<Employee>): void {
-    this.gridApi = event.api;
-  }
-
-  onFilterChanged(): void {
-    this.displayed.set(this.gridApi?.getDisplayedRowCount() ?? EMPLOYEES.length);
-  }
-
-  onSelectionChanged(event: SelectionChangedEvent<Employee>): void {
-    this.selected.set(event.selectedRows.length);
-  }
+  onGridReady(event: GridReadyEvent<Employee>): void           { this.gridApi = event.api; }
+  onFilterChanged(): void                                       { this.displayed.set(this.gridApi?.getDisplayedRowCount() ?? EMPLOYEES.length); }
+  onSelectionChanged(e: SelectionChangedEvent<Employee>): void { this.selected.set(e.selectedRows.length); }
+  toggleGrouped(): void                                         { this.grouped.update(v => !v); }
 
   onSearch(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
@@ -280,9 +259,5 @@ export class HomeDemoComponent {
     this.displayed.set(this.gridApi?.getDisplayedRowCount() ?? EMPLOYEES.length);
   }
 
-  toggleGrouped(): void { this.grouped.update(v => !v); }
-
-  exportCsv(): void {
-    this.gridApi?.downloadCsv('employees.csv');
-  }
+  exportCsv(): void { this.gridApi?.downloadCsv('employees.csv'); }
 }

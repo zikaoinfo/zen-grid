@@ -2,10 +2,10 @@ import { Component } from '@angular/core';
 import {
   ZenGridComponent,
   textColumn, numberColumn, currencyColumn,
-  dateColumn, booleanColumn, badgeColumn, percentColumn,
+  dateColumn, booleanColumn, badgeColumn,
 } from 'zen-grid';
 import type { ColDefOrGroup } from 'zen-grid';
-import { CodePanelComponent } from './code-panel.component';
+import { SplitPaneComponent } from './split-pane.component';
 import type { CodeTab } from './code-panel.component';
 import { Employee, EMPLOYEES } from './data';
 
@@ -39,7 +39,7 @@ numberColumn<Employee>('performance', {
 // Decimal
 numberColumn<Employee>('ratio', { decimals: 2 })
 
-// Currency — locale currency symbol & thousands separator
+// Currency — locale currency symbol and thousands separator
 currencyColumn<Employee>('salary', { headerName: 'Salary' })
 
 // Percent — multiplies by 100, appends %
@@ -64,17 +64,17 @@ dateColumn<Employee>('hireDate', {
 
 const CODE_BOOL = `import { booleanColumn } from 'zen-grid';
 
-// Renders checkmark for true, dash for false
+// Renders a checkmark for true, dash for false
 booleanColumn<Employee>('remote', { headerName: 'Remote' })`;
 
 const CODE_BADGE = `import { badgeColumn } from 'zen-grid';
 
-// Value is lowercased and spaces replaced with dashes
-// → generates CSS classes: zen-badge  zen-badge-<value>
+// Value is lowercased; spaces replaced with dashes.
+// Generates CSS classes:  zen-badge  zen-badge-<value>
 badgeColumn<Employee>('status', { headerName: 'Status' })
 
-// Define the badge styles in your global styles.scss:
-// .zen-badge          { padding: 2px 10px; border-radius: 12px; font-size: 11px; }
+// Define badge styles in global styles.scss:
+// .zen-badge          { padding: 2px 10px; border-radius: 12px; }
 // .zen-badge-active   { background: #d1fae5; color: #065f46; }
 // .zen-badge-inactive { background: #fee2e2; color: #991b1b; }
 // .zen-badge-on-leave { background: #fef3c7; color: #92400e; }`;
@@ -82,7 +82,7 @@ badgeColumn<Employee>('status', { headerName: 'Status' })
 @Component({
   selector: 'app-column-types-demo',
   standalone: true,
-  imports: [ZenGridComponent, CodePanelComponent],
+  imports: [ZenGridComponent, SplitPaneComponent],
   template: `
     <div class="page">
       <div class="intro">
@@ -93,12 +93,11 @@ badgeColumn<Employee>('status', { headerName: 'Status' })
           right to see the code for each type.
         </p>
       </div>
-      <div class="body">
+      <app-split-pane [codeTabs]="codeTabs">
         <div class="demo">
           <zen-grid class="grid" [columnDefs]="columns" [rowData]="EMPLOYEES" [options]="options" />
         </div>
-        <app-code-panel [tabs]="codeTabs" />
-      </div>
+      </app-split-pane>
     </div>
   `,
   styles: [`
@@ -112,8 +111,6 @@ badgeColumn<Employee>('status', { headerName: 'Status' })
       h2 { font-size: 16px; font-weight: 600; color: #cdd6f4; margin: 0 0 4px; }
       p  { font-size: 13px; color: #6c7086; margin: 0; line-height: 1.5; }
     }
-
-    .body { display: flex; flex: 1; overflow: hidden; }
 
     .demo {
       flex: 1; min-width: 0;
@@ -141,10 +138,10 @@ export class ColumnTypesDemoComponent {
   readonly options = { defaultColDef: { sortable: true } };
 
   readonly codeTabs: CodeTab[] = [
-    { label: 'textColumn',     code: CODE_TEXT   },
-    { label: 'numberColumn',   code: CODE_NUMBER },
-    { label: 'dateColumn',     code: CODE_DATE   },
-    { label: 'booleanColumn',  code: CODE_BOOL   },
-    { label: 'badgeColumn',    code: CODE_BADGE  },
+    { label: 'textColumn',    code: CODE_TEXT   },
+    { label: 'numberColumn',  code: CODE_NUMBER },
+    { label: 'dateColumn',    code: CODE_DATE   },
+    { label: 'booleanColumn', code: CODE_BOOL   },
+    { label: 'badgeColumn',   code: CODE_BADGE  },
   ];
 }

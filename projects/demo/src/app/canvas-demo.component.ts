@@ -5,7 +5,7 @@ import type { GridApi } from 'zen-grid';
 import { SplitPaneComponent } from './split-pane.component';
 import type { CodeTab } from './code-panel.component';
 
-interface PerfRow {
+interface CanvasRow {
   id: number;
   name: string;
   department: string;
@@ -16,12 +16,12 @@ interface PerfRow {
 
 const DEPTS = ['Engineering', 'Sales', 'Marketing', 'Finance', 'HR', 'Operations', 'Legal', 'Support'];
 
-function generateRows(n: number): PerfRow[] {
-  const rows: PerfRow[] = [];
+function generateRows(n: number): CanvasRow[] {
+  const rows: CanvasRow[] = [];
   for (let i = 0; i < n; i++) {
     rows.push({
       id:         i + 1,
-      name:       `Employee ${String(i + 1).padStart(5, '0')}`,
+      name:       `Employee ${String(i + 1).padStart(6, '0')}`,
       department: DEPTS[i % DEPTS.length],
       salary:     40_000 + (i % 80_001),
       score:      (i % 100) + 1,
@@ -31,14 +31,15 @@ function generateRows(n: number): PerfRow[] {
   return rows;
 }
 
-const CODE_TS = `// Virtual scrolling is automatic — no extra configuration needed.
-// zen-grid only renders rows visible in the viewport.
+const CODE_TS = `// Switch to canvas render mode for 100k+ rows.
+// The grid paints rows onto an offscreen <canvas> instead of
+// creating DOM elements — near-zero layout pressure.
 
-interface PerfRow { id: number; name: string; salary: number; }
+interface Row { id: number; name: string; salary: number; }
 
-const ROWS: PerfRow[] = Array.from({ length: 25_000 }, (_, i) => ({
+const ROWS: Row[] = Array.from({ length: 100_000 }, (_, i) => ({
   id:         i + 1,
-  name:       \`Employee \${String(i + 1).padStart(5, '0')}\`,
+  name:       \`Employee \${String(i + 1).padStart(6, '0')}\`,
   department: DEPTS[i % DEPTS.length],
   salary:     40_000 + (i % 80_001),
 }));
@@ -46,32 +47,54 @@ const ROWS: PerfRow[] = Array.from({ length: 25_000 }, (_, i) => ({
 @Component({
   standalone: true,
   imports: [ZenGridComponent],
-  template: \`<zen-grid [columnDefs]="columns" [rowData]="rows" [options]="options" />\`,
+  template: \`<zen-grid [columnDefs]="cols" [rowData]="rows" [options]="opts" />\`,
 })
-export class LargeDemoComponent {
+export class CanvasDemoComponent {
   readonly rows = ROWS; // generated once on component creation
 
-  readonly options: GridOptions<PerfRow> = {
-    getRowId: (row) => row.id, // stable identity — avoids full re-renders
+  readonly opts: GridOptions<Row> = {
+    renderMode: 'canvas',   // <-- the only difference from DOM mode
+    getRowId: (r) => r.id,  // stable identity avoids full repaints
     defaultColDef: { sortable: true },
   };
 }
 
-// For 100k+ rows, switch to canvas render mode (see next example):
-// options = { renderMode: 'canvas', getRowId: (r) => r.id }`;
+// When to use canvas vs. DOM:
+//
+// DOM   (<50k rows)   full Angular templates, custom cell components,
+//                     CSS-based styling, accessibility (ARIA)
+// Canvas (100k+ rows) maximum throughput, limited custom rendering`;
+
+const CODE_COMPARE = `// DOM mode (default) — up to ~50k rows
+const domOptions: GridOptions<Row> = {
+  defaultColDef: { sortable: true },
+};
+
+// Canvas mode — 100k+ rows, read-only data
+const canvasOptions: GridOptions<Row> = {
+  renderMode: 'canvas',
+  getRowId: (row) => row.id,
+  defaultColDef: { sortable: true },
+};
+
+// Canvas limitations vs. DOM:
+// - Custom cellRenderer components are not supported
+// - CSS :hover / :focus rules do not apply to cells
+// - Copy-to-clipboard works; editing is not supported
+// - Accessibility (ARIA cell roles) falls back to the host element`;
 
 @Component({
-  selector: 'app-large-demo',
+  selector: 'app-canvas-demo',
   standalone: true,
   imports: [ZenGridComponent, SplitPaneComponent],
   template: `
     <div class="page">
       <div class="intro">
-        <h2>25 000 Rows</h2>
+        <h2>100 000 Rows — Canvas Mode</h2>
         <p>
-          Virtual scrolling is built-in — only the visible rows are rendered.
-          No configuration required. For 100 k+ rows, enable
-          <code>renderMode: 'canvas'</code> (see the next Performance example).
+          Set <code>renderMode: 'canvas'</code> to paint rows onto an offscreen
+          canvas element instead of creating DOM nodes.
+          Zero layout thrashing — the grid stays smooth even at 100 k+ rows.
         </p>
       </div>
       <app-split-pane [codeTabs]="codeTabs">
@@ -84,7 +107,7 @@ export class LargeDemoComponent {
               (input)="onSearch($event)"
             />
             @if (renderMs() !== null) {
-              <span class="perf-badge">Grid ready in {{ renderMs() }} ms</span>
+              <span class="perf-badge canvas">Canvas — ready in {{ renderMs() }} ms</span>
             }
             <span class="row-count">{{ displayed() }} / {{ rows.length }} rows</span>
           </div>
@@ -132,8 +155,9 @@ export class LargeDemoComponent {
 
     .perf-badge {
       padding: 5px 12px; border-radius: 20px;
-      font-size: 12px; font-weight: 600;
-      background: #d1fae5; color: #065f46; white-space: nowrap;
+      font-size: 12px; font-weight: 600; white-space: nowrap;
+      background: #d1fae5; color: #065f46;
+      &.canvas { background: #ede9fe; color: #5b21b6; }
     }
 
     .row-count { margin-left: auto; font-size: 13px; color: #64748b; white-space: nowrap; }
@@ -141,31 +165,35 @@ export class LargeDemoComponent {
     .grid { flex: 1; min-height: 0; }
   `],
 })
-export class LargeDemoComponent {
+export class CanvasDemoComponent {
   private readonly initTime = Date.now();
-  private gridApi: GridApi<PerfRow> | null = null;
+  private gridApi: GridApi<CanvasRow> | null = null;
 
-  readonly rows: PerfRow[] = generateRows(25_000);
+  readonly rows: CanvasRow[] = generateRows(100_000);
   readonly renderMs  = signal<number | null>(null);
   readonly displayed = signal(this.rows.length);
 
-  readonly columns: ColDefOrGroup<PerfRow>[] = [
-    numberColumn<PerfRow>('id',         { headerName: 'ID',         decimals: 0, width: 80 }),
-    textColumn<PerfRow>('name',         { headerName: 'Name',       flex: 1.5 }),
-    textColumn<PerfRow>('department',   { headerName: 'Department', filter: 'set', width: 160 }),
-    numberColumn<PerfRow>('salary',     { headerName: 'Salary',     decimals: 0 }),
-    numberColumn<PerfRow>('score',      { headerName: 'Score',      decimals: 0, width: 80 }),
-    booleanColumn<PerfRow>('active',    { headerName: 'Active',     width: 90 }),
+  readonly columns: ColDefOrGroup<CanvasRow>[] = [
+    numberColumn<CanvasRow>('id',         { headerName: 'ID',         decimals: 0, width: 90 }),
+    textColumn<CanvasRow>('name',         { headerName: 'Name',       flex: 1.5 }),
+    textColumn<CanvasRow>('department',   { headerName: 'Department', filter: 'set', width: 160 }),
+    numberColumn<CanvasRow>('salary',     { headerName: 'Salary',     decimals: 0 }),
+    numberColumn<CanvasRow>('score',      { headerName: 'Score',      decimals: 0, width: 80 }),
+    booleanColumn<CanvasRow>('active',    { headerName: 'Active',     width: 90 }),
   ];
 
-  readonly options: GridOptions<PerfRow> = {
+  readonly options: GridOptions<CanvasRow> = {
+    renderMode: 'canvas',
     getRowId: (row) => row.id,
     defaultColDef: { sortable: true },
   };
 
-  readonly codeTabs: CodeTab[] = [{ label: 'TypeScript', code: CODE_TS }];
+  readonly codeTabs: CodeTab[] = [
+    { label: 'TypeScript', code: CODE_TS      },
+    { label: 'DOM vs Canvas', code: CODE_COMPARE },
+  ];
 
-  onGridReady(event: GridReadyEvent<PerfRow>): void {
+  onGridReady(event: GridReadyEvent<CanvasRow>): void {
     this.gridApi = event.api;
     this.renderMs.set(Date.now() - this.initTime);
   }
