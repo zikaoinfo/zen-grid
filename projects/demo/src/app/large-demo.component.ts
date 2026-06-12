@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, linkedSignal, signal } from '@angular/core';
 import { ZenGridComponent, textColumn, numberColumn, booleanColumn } from 'zen-grid';
 import type { ColDefOrGroup, GridOptions, GridReadyEvent } from 'zen-grid';
 import type { GridApi } from 'zen-grid';
@@ -147,7 +147,7 @@ export class LargeDemoComponent {
 
   readonly rows: PerfRow[] = generateRows(25_000);
   readonly renderMs  = signal<number | null>(null);
-  readonly displayed = signal(this.rows.length);
+  readonly displayed = linkedSignal(() => this.rows.length);
 
   readonly columns: ColDefOrGroup<PerfRow>[] = [
     numberColumn<PerfRow>('id',         { headerName: 'ID',         decimals: 0, width: 80 }),

@@ -108,19 +108,16 @@ export class SplitPaneComponent {
     const startW = this.codeW();
     this.dragging.set(true);
 
-    const onMove = (e: PointerEvent) => {
-      const delta  = startX - e.clientX;
-      const newW   = Math.max(180, Math.min(800, startW + delta));
-      this.codeW.set(newW);
-    };
+    const onMove = (e: PointerEvent) =>
+      this.codeW.set(Math.max(180, Math.min(800, startW + (startX - e.clientX))));
 
     const onUp = () => {
       this.dragging.set(false);
       document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup',   onUp);
+      document.removeEventListener('pointerup', onUp);
     };
 
     document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup',   onUp);
+    document.addEventListener('pointerup', onUp);
   }
 }

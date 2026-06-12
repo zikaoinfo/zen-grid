@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, linkedSignal, signal } from '@angular/core';
 import { ZenGridComponent, textColumn, currencyColumn, badgeColumn, numberColumn } from 'zen-grid';
 import type { ColDefOrGroup, GridOptions, GridReadyEvent } from 'zen-grid';
 import type { GridApi } from 'zen-grid';
@@ -127,7 +127,7 @@ gridApi.setQuickFilter(null); // clear`;
 export class SortingDemoComponent {
   readonly EMPLOYEES = EMPLOYEES;
   private gridApi: GridApi<Employee> | null = null;
-  readonly displayed = signal(EMPLOYEES.length);
+  readonly displayed = linkedSignal(() => EMPLOYEES.length);
 
   readonly columns: ColDefOrGroup<Employee>[] = [
     textColumn<Employee>('name',        { headerName: 'Name',       flex: 1.5, pinned: 'left' }),
