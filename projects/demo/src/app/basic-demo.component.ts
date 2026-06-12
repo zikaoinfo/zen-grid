@@ -1,123 +1,125 @@
-import { Component, signal } from '@angular/core';
-import {
-  ZenGridComponent,
-  textColumn, currencyColumn, dateColumn, booleanColumn, badgeColumn, numberColumn,
-} from 'zen-grid';
-import type { ColDefOrGroup, GridOptions, GridReadyEvent } from 'zen-grid';
-import type { GridApi } from 'zen-grid';
-import { Employee, EMPLOYEES } from './data';
+import { Component } from '@angular/core';
+import { ZenGridComponent, textColumn, numberColumn } from 'zen-grid';
+import type { ColDefOrGroup } from 'zen-grid';
+import { CodePanelComponent } from './code-panel.component';
+import type { CodeTab } from './code-panel.component';
+
+interface Planet { name: string; type: string; diameter: number; moons: number; }
+
+const ROWS: Planet[] = [
+  { name: 'Mercury', type: 'Terrestrial', diameter:   4_879, moons:   0 },
+  { name: 'Venus',   type: 'Terrestrial', diameter:  12_104, moons:   0 },
+  { name: 'Earth',   type: 'Terrestrial', diameter:  12_756, moons:   1 },
+  { name: 'Mars',    type: 'Terrestrial', diameter:   6_792, moons:   2 },
+  { name: 'Jupiter', type: 'Gas Giant',   diameter: 142_984, moons:  95 },
+  { name: 'Saturn',  type: 'Gas Giant',   diameter: 120_536, moons: 145 },
+  { name: 'Uranus',  type: 'Ice Giant',   diameter:  51_118, moons:  28 },
+  { name: 'Neptune', type: 'Ice Giant',   diameter:  49_528, moons:  16 },
+];
+
+const CODE_TS = `import { Component } from '@angular/core';
+import { ZenGridComponent, textColumn, numberColumn } from 'zen-grid';
+import type { ColDefOrGroup } from 'zen-grid';
+
+interface Planet {
+  name: string; type: string;
+  diameter: number; moons: number;
+}
+
+const ROWS: Planet[] = [
+  { name: 'Mercury', type: 'Terrestrial', diameter:   4_879, moons:   0 },
+  { name: 'Venus',   type: 'Terrestrial', diameter:  12_104, moons:   0 },
+  { name: 'Earth',   type: 'Terrestrial', diameter:  12_756, moons:   1 },
+  { name: 'Mars',    type: 'Terrestrial', diameter:   6_792, moons:   2 },
+  { name: 'Jupiter', type: 'Gas Giant',   diameter: 142_984, moons:  95 },
+  { name: 'Saturn',  type: 'Gas Giant',   diameter: 120_536, moons: 145 },
+];
+
+@Component({
+  standalone: true,
+  imports: [ZenGridComponent],
+  template: \`
+    <zen-grid [columnDefs]="columns" [rowData]="rows" />
+  \`,
+})
+export class HelloWorldComponent {
+  readonly rows = ROWS;
+
+  readonly columns: ColDefOrGroup<Planet>[] = [
+    textColumn<Planet>('name',     { headerName: 'Planet'      }),
+    textColumn<Planet>('type',     { headerName: 'Type'        }),
+    numberColumn<Planet>('diameter', {
+      headerName: 'Diameter km', decimals: 0,
+    }),
+    numberColumn<Planet>('moons', {
+      headerName: 'Moons', decimals: 0, width: 90,
+    }),
+  ];
+}`;
 
 @Component({
   selector: 'app-basic-demo',
   standalone: true,
-  imports: [ZenGridComponent],
+  imports: [ZenGridComponent, CodePanelComponent],
   template: `
-    <div class="toolbar">
-      <input
-        class="search"
-        type="search"
-        placeholder="Quick filter across all columns…"
-        (input)="onSearch($event)"
-      />
-      <button class="btn" (click)="exportCsv()">⬇ Export CSV</button>
-      <span class="row-count">{{ displayedCount() }} / {{ EMPLOYEES.length }} rows</span>
+    <div class="page">
+      <div class="intro">
+        <h2>Hello World</h2>
+        <p>
+          The minimum you need: define a row interface, build column definitions
+          with a column-type helper, then bind <code>[columnDefs]</code> and
+          <code>[rowData]</code> to <code>&lt;zen-grid&gt;</code>.
+        </p>
+      </div>
+      <div class="body">
+        <div class="demo">
+          <zen-grid class="grid" [columnDefs]="columns" [rowData]="rows" />
+        </div>
+        <app-code-panel [tabs]="codeTabs" />
+      </div>
     </div>
-    <zen-grid
-      class="grid"
-      [columnDefs]="columns"
-      [rowData]="EMPLOYEES"
-      [options]="options"
-      (gridReady)="onGridReady($event)"
-      (filterChanged)="onFilterChanged()"
-    />
   `,
   styles: [`
-    :host { display: flex; flex-direction: column; height: 100%; gap: 12px; }
+    :host { display: flex; flex: 1; overflow: hidden; min-width: 0; }
 
-    .toolbar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .page { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    .intro {
+      padding: 16px 24px;
+      background: #12131f;
+      border-bottom: 1px solid #1a1b2e;
       flex-shrink: 0;
-    }
-
-    .search {
-      flex: 1;
-      max-width: 380px;
-      padding: 8px 14px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-      outline: none;
-      background: #fff;
-
-      &:focus {
-        border-color: #6366f1;
-        box-shadow: 0 0 0 3px rgb(99 102 241 / 0.12);
+      h2 { font-size: 16px; font-weight: 600; color: #cdd6f4; margin: 0 0 4px; }
+      p  { font-size: 13px; color: #6c7086; margin: 0; line-height: 1.5; }
+      code {
+        font-family: 'Fira Code', monospace; font-size: 12px;
+        background: #1e1f38; padding: 1px 5px; border-radius: 4px; color: #a5b4fc;
       }
     }
 
-    .btn {
-      padding: 8px 16px;
-      background: #6366f1;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 500;
-      font-family: inherit;
-      transition: background 0.15s;
+    .body { display: flex; flex: 1; overflow: hidden; }
 
-      &:hover { background: #4f46e5; }
-    }
-
-    .row-count {
-      margin-left: auto;
-      color: #64748b;
-      font-size: 13px;
+    .demo {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column;
+      padding: 20px 24px;
+      background: #f8fafc;
     }
 
     .grid { flex: 1; min-height: 0; }
   `],
 })
 export class BasicDemoComponent {
-  readonly EMPLOYEES = EMPLOYEES;
-  private gridApi: GridApi<Employee> | null = null;
-  readonly displayedCount = signal(EMPLOYEES.length);
+  readonly rows = ROWS;
 
-  readonly columns: ColDefOrGroup<Employee>[] = [
-    textColumn<Employee>('name',        { headerName: 'Full Name',   flex: 1.5, pinned: 'left' }),
-    textColumn<Employee>('department',  { headerName: 'Department',  filter: 'set', width: 160 }),
-    textColumn<Employee>('role',        { headerName: 'Role',        flex: 1 }),
-    currencyColumn<Employee>('salary',  { headerName: 'Salary' }),
-    badgeColumn<Employee>('status',     { headerName: 'Status',      width: 120 }),
-    dateColumn<Employee>('startDate',   { headerName: 'Start Date',  width: 130 }),
-    numberColumn<Employee>('performance', { headerName: 'Score',     decimals: 0, width: 80 }),
-    booleanColumn<Employee>('remote',   { headerName: 'Remote',      width: 90 }),
+  readonly columns: ColDefOrGroup<Planet>[] = [
+    textColumn<Planet>('name',     { headerName: 'Planet'                         }),
+    textColumn<Planet>('type',     { headerName: 'Type'                           }),
+    numberColumn<Planet>('diameter', { headerName: 'Diameter km', decimals: 0     }),
+    numberColumn<Planet>('moons',    { headerName: 'Moons',       decimals: 0, width: 90 }),
   ];
 
-  readonly options: GridOptions<Employee> = {
-    selection: { mode: 'multiple', checkboxes: true },
-    defaultColDef: { sortable: true },
-  };
-
-  onGridReady(event: GridReadyEvent<Employee>): void {
-    this.gridApi = event.api;
-  }
-
-  onFilterChanged(): void {
-    this.displayedCount.set(this.gridApi?.getDisplayedRowCount() ?? EMPLOYEES.length);
-  }
-
-  onSearch(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.gridApi?.setQuickFilter(value || null);
-    this.displayedCount.set(this.gridApi?.getDisplayedRowCount() ?? EMPLOYEES.length);
-  }
-
-  exportCsv(): void {
-    this.gridApi?.downloadCsv('employees.csv');
-  }
+  readonly codeTabs: CodeTab[] = [
+    { label: 'TypeScript', code: CODE_TS },
+  ];
 }
