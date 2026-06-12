@@ -103,6 +103,7 @@ export class SortFilterEngine<T extends object = object> {
     if (entries.length === 0 && quick === null) return rows;
 
     const quickColumns = columns.filter((c) => c.quickFilter !== false);
+    const nQuick = quickColumns.length;
 
     return rows.filter((row) => {
       for (const [colId, model] of entries) {
@@ -111,10 +112,15 @@ export class SortFilterEngine<T extends object = object> {
         if (!this.passesColumnFilter(this.valueOf(row, colDef), model)) return false;
       }
       if (quick !== null) {
-        const hit = quickColumns.some((c) =>
-          this.displayValue(row, c).toLowerCase().includes(quick),
-        );
-        if (!hit) return false;
+        // Concatenate all column values into one string, then lowercase once.
+        // One toLowerCase() per row instead of one per column — critical for
+        // large datasets (500k rows × 40 cols = 20M allocations otherwise).
+        let haystack = '';
+        for (let i = 0; i < nQuick; i++) {
+          if (i > 0) haystack += '\x00';
+          haystack += this.displayValue(row, quickColumns[i]);
+        }
+        if (!haystack.toLowerCase().includes(quick)) return false;
       }
       return true;
     });
