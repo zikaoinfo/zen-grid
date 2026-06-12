@@ -3,21 +3,75 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 export interface CodeTab { label: string; code: string; }
 
+function esc(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+const KW_RE  = /\b(import|export|from|default|const|let|var|class|interface|type|extends|implements|return|new|this|null|undefined|true|false|async|await|readonly|private|public|protected|static|of|in|for|if|else|while|do|throw|try|catch|finally|override)\b/g;
+const DEC_RE = /(@[A-Za-z]\w*)/g;
+const NUM_RE = /(?<!["\w])(\d[\d_]*(?:\.\d+)?)\b/g;
+
+function applyTokens(plain: string): string {
+  return plain
+    .replace(KW_RE,  '<span class="hl-k">$1</span>')
+    .replace(DEC_RE, '<span class="hl-d">$1</span>')
+    .replace(NUM_RE, '<span class="hl-n">$1</span>');
+}
+
 function highlight(raw: string): string {
-  const KW = /\b(import|export|from|default|const|let|var|class|interface|type|extends|implements|return|new|this|null|undefined|true|false|async|await|readonly|private|public|protected|static|of|in|for|if|else|while|do|throw|try|catch|finally|override)\b/g;
-  return raw
-    .split('\n')
-    .map(line => {
-      const e = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      if (/^\s*\/\//.test(line)) return `<span class="hl-c">${e}</span>`;
-      return e
-        .replace(/(\/\/[^\n]*)$/, '<span class="hl-c">$1</span>')
-        .replace(/('[^'\n]*'|"[^"\n]*")/g, '<span class="hl-s">$1</span>')
-        .replace(KW, '<span class="hl-k">$1</span>')
-        .replace(/(@[A-Za-z]\w*)/g, '<span class="hl-d">$1</span>')
-        .replace(/(?<!["\w])(\d[\d_]*(?:\.\d+)?)\b/g, '<span class="hl-n">$1</span>');
-    })
-    .join('\n');
+  return raw.split('\n').map(line => {
+    // Full-line comment
+    if (/^\s*\/\//.test(line)) return `<span class="hl-c">${esc(line)}</span>`;
+
+    const out: string[] = [];
+    let i = 0;
+    while (i < line.length) {
+      // Inline comment — rest of line
+      if (line[i] === '/' && line[i + 1] === '/') {
+        out.push(`<span class="hl-c">${esc(line.slice(i))}</span>`);
+        i = line.length;
+        break;
+      }
+
+      // String literal (single or double quote)
+      const q = line[i];
+      if (q === '"' || q === "'") {
+        let j = i + 1;
+        while (j < line.length && line[j] !== q) {
+          if (line[j] === '\\') j++;
+          j++;
+        }
+        if (j < line.length) j++;
+        out.push(`<span class="hl-s">${esc(line.slice(i, j))}</span>`);
+        i = j;
+        continue;
+      }
+
+      // Template literal (backtick)
+      if (q === '`') {
+        let j = i + 1;
+        while (j < line.length && line[j] !== '`') {
+          if (line[j] === '\\') j++;
+          j++;
+        }
+        if (j < line.length) j++;
+        out.push(`<span class="hl-s">${esc(line.slice(i, j))}</span>`);
+        i = j;
+        continue;
+      }
+
+      // Plain segment — run until next string/comment delimiter
+      let j = i;
+      while (
+        j < line.length &&
+        line[j] !== '"' && line[j] !== "'" && line[j] !== '`' &&
+        !(line[j] === '/' && line[j + 1] === '/')
+      ) j++;
+      out.push(applyTokens(esc(line.slice(i, j))));
+      i = j;
+    }
+    return out.join('');
+  }).join('\n');
 }
 
 @Component({
@@ -40,8 +94,8 @@ function highlight(raw: string): string {
     :host {
       display: flex;
       flex-direction: column;
-      width: 420px;
-      flex-shrink: 0;
+      flex: 1;
+      min-width: 0;
       background: #1a1b2e;
       border-left: 1px solid #2d2d50;
       overflow: hidden;
@@ -98,11 +152,16 @@ function highlight(raw: string): string {
       color: #cdd6f4;
       white-space: pre;
     }
+    .hl-k { color: #cba6f7; }
+    .hl-s { color: #a6e3a1; }
+    .hl-c { color: #6c7086; font-style: italic; }
+    .hl-d { color: #89b4fa; }
+    .hl-n { color: #fab387; }
   `],
 })
 export class CodePanelComponent {
   private readonly san = inject(DomSanitizer);
-  readonly tabs     = input.required<CodeTab[]>();
+  readonly tabs      = input.required<CodeTab[]>();
   readonly activeIdx = signal(0);
   readonly copied    = signal(false);
 
