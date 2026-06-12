@@ -6,7 +6,6 @@
     "moduleResolution": "node",
     "types": ["jest"],
     "esModuleInterop": true,
-    "emitDecoratorMetadata": true,
     "allowJs": true
   },
   "include": ["src/**/*.spec.ts", "src/**/*.d.ts", "src/**/*.ts", "setup-jest.ts"]
