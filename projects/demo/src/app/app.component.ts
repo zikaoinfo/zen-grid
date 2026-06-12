@@ -21,7 +21,7 @@ const NAV: NavSection[] = [
                                        { id: 'grouping',     label: 'Row Grouping'    },
                                        { id: 'editing',      label: 'Inline Editing'  }] },
   { label: 'Performance',     items: [{ id: 'large',        label: '25 000 Rows'     },
-                                       { id: 'canvas',       label: '100 000 Rows'    }] },
+                                       { id: 'canvas',       label: '100k Virtual Scroll' }] },
 ];
 
 @Component({

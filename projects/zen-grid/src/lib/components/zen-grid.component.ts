@@ -487,7 +487,19 @@ export class ZenGridComponent<T extends object = object> {
         this.columns.applyFlex(vp.clientWidth);
       }
       const canvasEl = this.canvasEl()?.nativeElement;
-      if (canvasEl) this.canvas.attach(canvasEl);
+      if (canvasEl) {
+        this.canvas.attach(canvasEl);
+        // The paint effect fires before afterNextRender attaches the canvas
+        // element (ctx is null at that point). Kick the initial paint now.
+        if (this.renderMode() === 'canvas') {
+          const rows = this.dataSource.processedRows();
+          const cols = this.columns.centerColumns();
+          const ids  = this.selection.selectedIds();
+          const sel  = new Set<number>();
+          for (const n of rows) if (ids.has(n.id)) sel.add(n.rowIndex);
+          this.canvas.schedulePaint(rows, cols, sel);
+        }
+      }
 
       this.api.registerUiHooks({
         scrollToTop: (top) => {
