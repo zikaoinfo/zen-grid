@@ -7,6 +7,7 @@
     "build:prod": "ng build zen-grid --configuration production",
     "test": "jest",
     "test:watch": "jest --watch",
+    "build:demo": "npm run build:prod && ng build demo --configuration production --base-href /zen-grid/",
     "pack": "npm run build:prod && cd dist/zen-grid && npm pack"
   },
   "dependencies": {

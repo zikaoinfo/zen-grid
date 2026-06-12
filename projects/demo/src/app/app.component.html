@@ -1,0 +1,39 @@
+<header class="header">
+  <div class="brand">
+    <div class="logo">ZG</div>
+    <div class="brand-text">
+      <h1>zen-grid</h1>
+      <p>Signal-native Angular 19 data grid &mdash; 500 rows</p>
+    </div>
+  </div>
+  <div class="header-links">
+    <a class="chip" href="https://github.com/zikaoinfo/zen-grid" target="_blank" rel="noopener noreferrer">
+      GitHub ↗
+    </a>
+    <a class="chip chip-outline" href="https://www.npmjs.com/package/zen-grid" target="_blank" rel="noopener noreferrer">
+      npm ↗
+    </a>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab" [class.active]="activeTab() === 'basic'"    (click)="setTab('basic')">
+    Employee Directory
+  </button>
+  <button class="tab" [class.active]="activeTab() === 'grouping'" (click)="setTab('grouping')">
+    Dept Rollup
+  </button>
+  <button class="tab" [class.active]="activeTab() === 'editing'"  (click)="setTab('editing')">
+    Inline Editing
+  </button>
+</nav>
+
+<main class="content">
+  @if (activeTab() === 'basic') {
+    <app-basic-demo />
+  } @else if (activeTab() === 'grouping') {
+    <app-grouping-demo />
+  } @else {
+    <app-editing-demo />
+  }
+</main>
