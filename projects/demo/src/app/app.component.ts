@@ -7,8 +7,9 @@ import { GroupingDemoComponent }    from './grouping-demo.component';
 import { EditingDemoComponent }     from './editing-demo.component';
 import { LargeDemoComponent }       from './large-demo.component';
 import { CanvasDemoComponent }      from './canvas-demo.component';
+import { MassiveDemoComponent }     from './massive-demo.component';
 
-type Route = 'home' | 'hello-world' | 'column-types' | 'sorting' | 'grouping' | 'editing' | 'large' | 'canvas';
+type Route = 'home' | 'hello-world' | 'column-types' | 'sorting' | 'grouping' | 'editing' | 'large' | 'canvas' | 'massive';
 
 interface NavItem { id: Route; label: string; }
 interface NavSection { label: string; items: NavItem[]; }
@@ -21,7 +22,8 @@ const NAV: NavSection[] = [
                                        { id: 'grouping',     label: 'Row Grouping'        },
                                        { id: 'editing',      label: 'Inline Editing'      }] },
   { label: 'Performance',     items: [{ id: 'large',        label: '25 000 Rows'         },
-                                       { id: 'canvas',       label: '100k Virtual Scroll' }] },
+                                       { id: 'canvas',       label: '100k Virtual Scroll' },
+                                       { id: 'massive',      label: '500k · 40 Columns'   }] },
 ];
 
 @Component({
@@ -36,6 +38,7 @@ const NAV: NavSection[] = [
     EditingDemoComponent,
     LargeDemoComponent,
     CanvasDemoComponent,
+    MassiveDemoComponent,
   ],
   template: `
     <div class="shell" [class.open]="sidebarOpen()">
@@ -85,6 +88,7 @@ const NAV: NavSection[] = [
             @case ('editing')      { <app-editing-demo /> }
             @case ('large')        { <app-large-demo />  }
             @case ('canvas')       { <app-canvas-demo /> }
+            @case ('massive')      { <app-massive-demo /> }
           }
         </div>
       </div>
